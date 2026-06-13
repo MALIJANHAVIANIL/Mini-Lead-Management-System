@@ -1,0 +1,39 @@
+# Docker Compose Configuration
+# Spins up PostgreSQL database and the Lead Management backend server together.
+
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database Service
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: lead-system-db
+    restart: always
+    environment:
+      POSTGRES_USER: lead_user
+      POSTGRES_PASSWORD: lead_secure_password_2026
+      POSTGRES_DB: lead_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Express Backend API Service
+  backend-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lead-system-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - JWT_SECRET=lead_management_jwt_secret_fresher_key_2026!
+      # We connect the backend container to the DB container using the database service name:
+      - DATABASE_URL=postgresql://lead_user:lead_secure_password_2026@postgres-db:5432/lead_db
+    depends_on:
+      - postgres-db
+
+volumes:
+  postgres_data:

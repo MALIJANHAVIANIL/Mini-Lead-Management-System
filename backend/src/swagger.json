@@ -1,0 +1,202 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Mini Lead Management System API",
+    "version": "1.0.0",
+    "description": "API documentation for the Lead Management System. Created for freshman level evaluation."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "role": { "type": "string", "enum": ["Admin", "Manager", "Agent"] }
+                },
+                "required": ["name", "email", "password", "role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User registered successfully" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Log in and obtain JWT token",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get authenticated user profile",
+        "responses": {
+          "200": { "description": "Profile retrieved" }
+        }
+      }
+    },
+    "/auth/agents": {
+      "get": {
+        "summary": "Get list of all agents",
+        "responses": {
+          "200": { "description": "List of agents retrieved" }
+        }
+      }
+    },
+    "/leads": {
+      "get": {
+        "summary": "List leads with pagination, search, sort, and filtering",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "source", "in": "query", "schema": { "type": "string" } },
+          { "name": "assigned_to", "in": "query", "schema": { "type": "integer" } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string" } },
+          { "name": "sortOrder", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } }
+        ],
+        "responses": {
+          "200": { "description": "List of leads" }
+        }
+      },
+      "post": {
+        "summary": "Create a new lead (Admin/Manager only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "source": { "type": "string" },
+                  "notes": { "type": "string" }
+                },
+                "required": ["name", "email", "phone", "source"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Lead created and assigned successfully" }
+        }
+      }
+    },
+    "/leads/{id}": {
+      "get": {
+        "summary": "Get detailed lead information including activity timeline",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Detailed lead data" }
+        }
+      },
+      "put": {
+        "summary": "Update lead details (Agent: status & notes only; Admin/Manager: all fields)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "source": { "type": "string" },
+                  "status": { "type": "string" },
+                  "assigned_to": { "type": "integer" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Lead updated successfully" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a lead (Admin/Manager only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Lead deleted successfully" }
+        }
+      }
+    },
+    "/activity-logs": {
+      "get": {
+        "summary": "Retrieve recent lead activity logs",
+        "responses": {
+          "200": { "description": "List of activities" }
+        }
+      }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "summary": "Get statistics for dashboard rendering",
+        "responses": {
+          "200": { "description": "Statistics data" }
+        }
+      }
+    }
+  }
+}

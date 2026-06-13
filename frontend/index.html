@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LMS - Mini Lead Management System</title>
+  <!-- Main Premium CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Icons via FontAwesome (Standard, beginner friendly CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Navigation Bar (Hidden on login page) -->
+  <header id="main-header" style="display: none;">
+    <div class="container header-content">
+      <div class="logo-group">
+        <div class="logo-icon">L</div>
+        <span class="logo-text">LeadStream</span>
+      </div>
+      <nav class="nav-links">
+        <div class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
+          <i class="fa-solid fa-chart-simple"></i> Dashboard
+        </div>
+        <div class="nav-item" id="nav-leads" onclick="switchView('leads')">
+          <i class="fa-solid fa-address-book"></i> Leads
+        </div>
+      </nav>
+      <div class="nav-links">
+        <div class="user-badge">
+          <div class="avatar" id="user-avatar">U</div>
+          <span class="username" id="user-name-display">User Name</span>
+          <span class="role-tag" id="user-role-display">Role</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <!-- Dynamic Alert Banners (Global Container) -->
+    <div id="alert-container"></div>
+
+    <!-- ========================================== -->
+    <!-- 1. LOGIN & REGISTRATION SCREEN -->
+    <!-- ========================================== -->
+    <section id="screen-auth" class="screen active">
+      <div class="auth-wrapper">
+        <div class="auth-header">
+          <div class="logo-icon" style="margin: 0 auto; width: 60px; height: 60px; font-size: 2.25rem;">L</div>
+          <h1>Welcome to LeadStream</h1>
+          <p>Login or Register your account to manage leads</p>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div class="card" id="login-card">
+          <div class="card-title">Login</div>
+          <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" class="form-control" placeholder="name@company.com" required>
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Login <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </form>
+          <div class="auth-footer">
+            Don't have an account? <a href="#" onclick="toggleAuthForms(true)">Register here</a>
+          </div>
+        </div>
+
+        <!-- REGISTRATION FORM -->
+        <div class="card" id="register-card" style="display: none;">
+          <div class="card-title">Create Account</div>
+          <form id="register-form" onsubmit="handleRegister(event)">
+            <div class="form-group">
+              <label for="reg-name">Full Name</label>
+              <input type="text" id="reg-name" class="form-control" placeholder="John Doe" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Email Address</label>
+              <input type="email" id="reg-email" class="form-control" placeholder="john@company.com" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-password">Password</label>
+              <input type="password" id="reg-password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
+            </div>
+            <div class="form-group">
+              <label for="reg-role">Role</label>
+              <select id="reg-role" class="form-control" required>
+                <option value="Agent">Agent (Assigned Leads Only)</option>
+                <option value="Manager">Manager (Creates & Assigns)</option>
+                <option value="Admin">Admin (Full System Access)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Register <i class="fa-solid fa-user-plus"></i>
+            </button>
+          </form>
+          <div class="auth-footer">
+            Already have an account? <a href="#" onclick="toggleAuthForms(false)">Login here</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 2. DASHBOARD SCREEN -->
+    <!-- ========================================== -->
+    <section id="screen-dashboard" class="screen">
+      <!-- Welcome Header -->
+      <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1 style="font-family: var(--font-display); font-weight: 800;">System Overview</h1>
+          <p style="color: var(--text-secondary);">Real-time performance and audit summary</p>
+        </div>
+        <div id="manager-actions">
+          <!-- Create Lead Button (Only Managers/Admins see this) -->
+          <button class="btn btn-primary" onclick="openCreateLeadModal()">
+            <i class="fa-solid fa-plus"></i> Create New Lead
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Counters Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">Total Leads</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--status-new-text); background-color: var(--status-new-bg);"><i class="fa-solid fa-bell"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-new">0</span>
+            <span class="stat-label">New</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--status-inprogress-text); background-color: var(--status-inprogress-bg);"><i class="fa-solid fa-spinner"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-inprogress">0</span>
+            <span class="stat-label">In Progress</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--status-closed-text); background-color: var(--status-closed-bg);"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-closed">0</span>
+            <span class="stat-label">Closed Won</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-layout">
+        <!-- Chart / Status Breakdown Visuals -->
+        <div class="card">
+          <div class="card-title">Lead Performance Overview</div>
+          <div style="padding: 1rem 0; text-align: center;">
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Lead distribution status breakdown:</p>
+            
+            <!-- Simple custom styled dashboard visualization using raw HTML/CSS -->
+            <div id="stat-bars" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+              <!-- Javascript will inject data-driven bars here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Activity Feed (observability & WebSockets) -->
+        <div class="card">
+          <div class="card-title">
+            <span>Live Activity Feed</span>
+            <span class="live-badge"><div class="live-dot"></div> Live</span>
+          </div>
+          <div class="recent-logs-list" id="dashboard-activity-feed">
+            <!-- WebSocket updates will populate this in real-time -->
+            <div style="color: var(--text-muted); text-align: center; padding: 2rem 0;">No activities logged yet.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 3. LEAD LISTING SCREEN -->
+    <!-- ========================================== -->
+    <section id="screen-leads" class="screen">
+      <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1 style="font-family: var(--font-display); font-weight: 800;">Lead Repository</h1>
+          <p style="color: var(--text-secondary);">Sort, filter, search, and update client records</p>
+        </div>
+        <div id="leads-view-actions">
+          <button class="btn btn-primary" onclick="openCreateLeadModal()">
+            <i class="fa-solid fa-plus"></i> Create Lead
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Controls Row -->
+      <div class="card" style="padding: 1rem; margin-bottom: 1.5rem;">
+        <div class="filter-row">
+          <!-- Search box -->
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="filter-search" class="form-control search-input" placeholder="Search by name, email, or notes..." oninput="triggerSearch()">
+          </div>
+          <!-- Filter Status -->
+          <select id="filter-status" class="form-control filter-select" onchange="fetchLeadsList()">
+            <option value="">All Statuses</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Closed Won">Closed Won</option>
+            <option value="Lost">Lost</option>
+          </select>
+          <!-- Filter Source -->
+          <select id="filter-source" class="form-control filter-select" onchange="fetchLeadsList()">
+            <option value="">All Sources</option>
+            <option value="Website">Website</option>
+            <option value="Referral">Referral</option>
+            <option value="Cold Call">Cold Call</option>
+            <option value="Social Media">Social Media</option>
+            <option value="Email Campaign">Email Campaign</option>
+          </select>
+          <!-- Filter Agent (Only Admin/Manager see this) -->
+          <select id="filter-agent" class="form-control filter-select" onchange="fetchLeadsList()" style="display: none;">
+            <option value="">All Agents</option>
+            <!-- Javascript will inject list of agents -->
+          </select>
+          <!-- Clear Filters -->
+          <button class="btn btn-secondary" onclick="clearFilters()">Reset</button>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="toggleSort('name')">Name <i class="fa-solid fa-sort"></i></th>
+                <th onclick="toggleSort('email')">Email <i class="fa-solid fa-sort"></i></th>
+                <th onclick="toggleSort('phone')">Phone <i class="fa-solid fa-sort"></i></th>
+                <th onclick="toggleSort('source')">Source <i class="fa-solid fa-sort"></i></th>
+                <th onclick="toggleSort('status')">Status <i class="fa-solid fa-sort"></i></th>
+                <th>Assigned Agent</th>
+                <th onclick="toggleSort('created_at')">Created Date <i class="fa-solid fa-sort"></i></th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leads-table-body">
+              <!-- Leads data rows injected by Javascript -->
+              <tr>
+                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
+                  <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i><br>Loading leads database...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="pagination" style="padding: 1rem 1.5rem;">
+          <span class="pagination-info" id="pagination-text">Showing 0 of 0 Leads</span>
+          <div class="pagination-buttons">
+            <button class="btn btn-secondary btn-sm" id="prev-page-btn" onclick="changePage(-1)"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+            <button class="btn btn-secondary btn-sm" id="next-page-btn" onclick="changePage(1)">Next <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ========================================== -->
+  <!-- MODALS -->
+  <!-- ========================================== -->
+
+  <!-- MODAL 1: CREATE / EDIT LEAD FORM -->
+  <div class="modal-overlay" id="lead-form-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="lead-modal-title">Create New Lead</h2>
+        <button class="close-btn" onclick="closeLeadFormModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="lead-details-form" onsubmit="submitLeadForm(event)">
+          <input type="hidden" id="form-lead-id">
+          
+          <div class="form-group">
+            <label for="form-name">Lead Name *</label>
+            <input type="text" id="form-name" class="form-control" placeholder="e.g., Jane Smith" required>
+          </div>
+          <div class="form-group">
+            <label for="form-email">Email Address *</label>
+            <input type="email" id="form-email" class="form-control" placeholder="jane@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="form-phone">Phone Number *</label>
+            <input type="tel" id="form-phone" class="form-control" placeholder="e.g., +1 555-0199" required>
+          </div>
+          <div class="form-group">
+            <label for="form-source">Source *</label>
+            <select id="form-source" class="form-control" required>
+              <option value="Website">Website</option>
+              <option value="Referral">Referral</option>
+              <option value="Cold Call">Cold Call</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Email Campaign">Email Campaign</option>
+            </select>
+          </div>
+          
+          <!-- Status Field (Only visible when EDITING an existing lead) -->
+          <div class="form-group" id="form-status-group" style="display: none;">
+            <label for="form-status">Lead Status</label>
+            <select id="form-status" class="form-control">
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Closed Won">Closed Won</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+
+          <!-- Assign Agent Selection (Only Managers/Admins can set, Agents cannot) -->
+          <div class="form-group" id="form-agent-group">
+            <label for="form-assignee">Assign Agent (Leave empty for Auto-Assignment)</label>
+            <select id="form-assignee" class="form-control">
+              <option value="">Auto-Assign (Least-Loaded Agent)</option>
+              <!-- Injected by Javascript -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="form-notes">Notes / Observations</label>
+            <textarea id="form-notes" class="form-control" placeholder="Add any background context, interactions, or details here..."></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeLeadFormModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="lead-form-submit-btn">Save Lead</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 2: LEAD DETAILS VIEW -->
+  <div class="modal-overlay" id="lead-details-modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2>Lead Details Profile</h2>
+        <button class="close-btn" onclick="closeLeadDetailsModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="lead-details-modal-body">
+        <!-- Injected dynamically by Javascript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Client-side Logic Script -->
+  <script src="app.js"></script>
+</body>
+</html>

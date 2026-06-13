@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadStream - Architecture Presentation</title>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       CSS Variables & Custom Properties
+       ========================================================================== */
+    :root {
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      /* Sleek Harmonious Dark Theme Colors */
+      --bg-gradient-start: #0b0f19;
+      --bg-gradient-end: #17123a;
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-shadow: rgba(0, 0, 0, 0.4);
+      
+      --color-primary: #6366f1; /* Indigo */
+      --color-primary-glow: rgba(99, 102, 241, 0.15);
+      --color-secondary: #06b6d4; /* Cyan */
+      --color-accent: #10b981; /* Emerald */
+      
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-highlight: #ffffff;
+      
+      --code-bg: #090d16;
+      --code-border: rgba(255, 255, 255, 0.05);
+    }
+
+    /* ==========================================================================
+       Reset & Base Styles
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      perspective: 1000px;
+    }
+
+    /* ==========================================================================
+       Background Decorative Elements
+       ========================================================================== */
+    .glowing-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.45;
+    }
+
+    .orb-1 {
+      top: -10%;
+      left: -10%;
+      width: 40vw;
+      height: 40vw;
+      background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+      animation: float 20s infinite alternate;
+    }
+
+    .orb-2 {
+      bottom: -15%;
+      right: -10%;
+      width: 45vw;
+      height: 45vw;
+      background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
+      animation: float 25s infinite alternate-reverse;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(50px) scale(1.1); }
+    }
+
+    /* ==========================================================================
+       Presentation Structure
+       ========================================================================== */
+    .presentation-container {
+      position: relative;
+      width: 90%;
+      max-width: 1000px;
+      height: 600px;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Progress Indicators */
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 12.5%; /* Changes based on slide number */
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Slides Wrapper */
+    .slides-wrapper {
+      position: relative;
+      flex-grow: 1;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* Slide Card */
+    .slide-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 48px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      box-shadow: 0 20px 50px var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(100px) rotateY(-5deg);
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .slide-card.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0) rotateY(0deg);
+    }
+
+    .slide-card.prev {
+      transform: translateX(-100px) rotateY(5deg);
+    }
+
+    /* Slide Layout Typography & Grids */
+    .slide-header {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 12px;
+    }
+
+    .slide-category {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--color-secondary);
+      font-weight: 600;
+    }
+
+    .slide-title {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+      background: linear-gradient(120deg, #ffffff, #c7d2fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-number {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .slide-content {
+      flex-grow: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .slide-content.full-width {
+      grid-template-columns: 1fr;
+    }
+
+    /* Content components */
+    .desc-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .desc-column p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    .points-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .points-list li {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-main);
+      padding-left: 24px;
+      position: relative;
+    }
+
+    .points-list li::before {
+      content: "✦";
+      position: absolute;
+      left: 0;
+      color: var(--color-secondary);
+      font-weight: bold;
+    }
+
+    .visual-column {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      height: 100%;
+      min-height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* Specific components for visual display */
+    .code-snippet {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      color: #a78bfa;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      padding: 16px;
+      width: 100%;
+      overflow-x: auto;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .diagram-mock {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .diagram-node {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #c7d2fe;
+    }
+
+    .diagram-node.accent {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: #c5f2f7;
+    }
+
+    .diagram-node.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #d1fae5;
+    }
+
+    .arrow-down {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      margin: -8px 0;
+    }
+
+    /* Title Slide Layout */
+    .title-slide-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .title-logo {
+      font-family: var(--font-heading);
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, #ffffff 30%, var(--color-primary) 65%, var(--color-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.2));
+    }
+
+    .title-badge {
+      background: var(--color-primary-glow);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .title-author {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 16px;
+      width: 50%;
+    }
+
+    /* ==========================================================================
+       Controls & Navigation Footer
+       ========================================================================== */
+    .footer-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      z-index: 2;
+    }
+
+    .dots-nav {
+      display: flex;
+      gap: 10px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: var(--color-primary);
+      transform: scale(1.3);
+      box-shadow: 0 0 10px var(--color-primary);
+    }
+
+    .buttons-nav {
+      display: flex;
+      gap: 16px;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text-highlight);
+      transform: translateY(-2px);
+    }
+
+    .nav-btn:active {
+      transform: translateY(0);
+    }
+
+    .nav-btn.primary {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+      box-shadow: 0 4px 14px var(--color-primary-glow);
+    }
+
+    .nav-btn.primary:hover {
+      background: #4f46e5;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    }
+
+    .keyboard-hint {
+      position: absolute;
+      bottom: 24px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Decorative Orbs -->
+  <div class="glowing-orb orb-1"></div>
+  <div class="glowing-orb orb-2"></div>
+
+  <!-- Main Presentation Container -->
+  <div class="presentation-container">
+    
+    <!-- Top Progress Bar -->
+    <div class="progress-bar-container">
+      <div id="progress" class="progress-bar"></div>
+    </div>
+
+    <!-- Active Slides Wrapper -->
+    <div class="slides-wrapper">
+
+      <!-- SLIDE 1: Title -->
+      <div class="slide-card active" data-slide="1">
+        <div class="title-slide-content">
+          <div class="title-badge">Architecture Explanation</div>
+          <h1 class="title-logo">LeadStream</h1>
+          <p style="font-size: 1.3rem; color: var(--text-main); font-weight: 300;">Mini Lead Management System</p>
+          <p style="font-size: 1.05rem; color: var(--text-muted); max-width: 600px;">A decoupled architecture built using Node.js, Express, PostgreSQL, zero-config SQLite, WebSockets, and premium Vanilla Frontend layout.</p>
+          
+          <div class="title-author">
+            <p style="font-weight: 600; color: var(--text-highlight);">Developer Assessment Submission</p>
+            <p style="font-size: 0.8rem; margin-top: 4px;">Press Right Arrow or click Next to start</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 2: Project Architecture -->
+      <div class="slide-card" data-slide="2">
+        <div class="slide-header">
+          <div>
+            <span class="slide-category">System Design</span>
+            <h2 class="slide-title">1. Project Architecture</h2>
+          </div>
+          <span class="slide-number">02 / 08</span>
+        </div>
+        <div class="slide-content">
+          <div class="desc-column">
+            <p>The application is built on a **fully decoupled Client-Server architecture**, isolating backend resources from client view layers:</p>
+            <ul class="points-list">
+              <li><strong>Thin-Client Frontend</strong>: Built using semantic HTML5, clean vanilla CSS variables, and a client-side Hash-based SPA routing controller.</li>
+              <li><strong>Express.js API</strong>: A RESTful backend that handles core routing, inputs validation, JWT checks, and database interactions.</li>
+              <li><strong>WebSocket Broadcast Server</strong>: Lives on the HTTP channel and pushes instant event alerts (e.g., creations, modifications) to active client dashboards.</li>
+            </ul>
+          </div>
+          <div class="visual-column">
+            <div class="diagram-mock">
+              <div class="diagram-node">Frontend (Vanilla App)</div>
+              <div class="arrow-down">⇅ HTTP Fetches / WS Updates</div>
+              <div class="diagram-node accent">Backend Server (Express)</div>
+              <div class="arrow-down">↓ Database Adaptability</div>
+              <div class="diagram-node success">Database File (SQLite) / PostgreSQL Pool</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3: Folder Structure -->
+      <div class="slide-card" data-slide="3">
+        <div class="slide-header">
+          <div>
+            <span class="slide-category">Repository</span>
+            <h2 class="slide-title">2. Folder Structure</h2>
+          </div>
+          <span class="slide-number">03 / 08</span>
+        </div>
+        <div class="slide-content">
+          <div class="desc-column">
+            <p>Our workspace maintains clean segregation of concerns, ensuring easy review and long-term maintainability:</p>
+            <ul class="points-list">
+              <li><strong>backend/src/db</strong>: Manages the unified db adapter and SQL table schema creations.</li>
+              <li><strong>backend/src/middleware</strong>: Holds authentication wrappers and role verification guards.</li>
+              <li><strong>backend/src/controllers</strong>: Handles API business logic (Leads operations, user accounts).</li>
+              <li><strong>backend/src/services</strong>: Houses decoupled worker modules (auto-assign algorithm, third-party metadata scrapers).</li>
+              <li><strong>frontend/</strong>: Complete CSS stylesheets, template views, and SPA state controller code.</li>
+            </ul>
+          </div>
+          <div class="visual-column" style="background: #07090e;">
+            <pre class="code-snippet" style="height: 100%;">
+lead-management-system/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/   # Route handlers
+│   │   ├── db/            # Connection & schema
+│   │   ├── middleware/    # Auth guards
+│   │   ├── routes/        # Router endpoints
+│   │   ├── services/      # Auto-assign & scraping
+│   │   └── server.js      # Server entry point
+│   ├── .env               # Environment keys
+│   └── package.json       # Dependencies
+└── frontend/
+    ├── index.html         # HTML layout
+    ├── style.css          # CSS styles
+    └── app.js             # Client SPA script</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 4: Authentication & RBAC -->
+      <div class="slide-card" data-slide="4">
+        <div class="slide-header">
+          <div>
+            <span class="slide-category">Security</span>
+            <h2 class="slide-title">3. Authentication & RBAC</h2>
+          </div>
+          <span class="slide-number">04 / 08</span>
+        </div>
+        <div class="slide-content">
+          <div class="desc-column">
+            <p>We implement secure, stateless <strong>JWT Authentication</strong> combined with detailed <strong>Role-Based Access Control (RBAC)</strong>:</p>
+            <ul class="points-list">
+              <li><strong>Token Guards</strong>: Incoming client API requests verify JWT signatures in a middleware wrapper, translating sub-identifiers into user profiles.</li>
+              <li><strong>Admin / Manager Rights</strong>: Full permission sets. Access to overall creation, modifications, custom assignments, and logs.</li>
+              <li><strong>Agent Scope Restrictions</strong>: Agents can only fetch leads assigned to them. At update time, attempts to modify structural attributes (e.g. client names, assignments) throw a <code>403 Forbidden</code> response. Agents can only alter status and notes.</li>
+            </ul>
+          </div>
+          <div class="visual-column">
+            <div class="diagram-mock">
+              <div class="diagram-node accent">Client Login (POST)</div>
+              <div class="arrow-down">↓ bcrypt Verification</div>
+              <div class="diagram-node">JWT Issued (Expires in 24h)</div>
+              <div class="arrow-down">↓ Bearer Header Sent</div>
+              <div class="diagram-node success">Route Guards check Permissions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 5: Database Design -->
+      <div class="slide-card" data-slide="5">
+        <div class="slide-header">
+          <div>
+            <span class="slide-category">Persistence</span>
+            <h2 class="slide-title">4. Database Design & Duality</h2>
+          </div>
+          <span class="slide-number">05 / 08</span>
+        </div>
+        <div class="slide-content">
+          <div class="desc-column">
+            <p>Our persistence tier is designed for absolute flexibility and optimized for performance metrics:</p>
+            <ul class="points-list">
+              <li><strong>Dual-Engine Compatibility</strong>: By default, the app initializes zero-config local SQLite. Simply adding a connection string in <code>DATABASE_URL</code> dynamically binds the application to PostgreSQL.</li>
+              <li><strong>Normalized Relations</strong>: Users reference leads through foreign keys. Leads write history rows to a separate activity logs auditor table (cascade-deleted with leads).</li>
+              <li><strong>Index Optimization</strong>: High-cardinality filters and assignments utilize database indexes (<code>status</code>, <code>source</code>, <code>assigned_to</code>) to maintain sub-millisecond retrieval speeds.</li>
+            </ul>
+          </div>
+          <div class="visual-column">
+            <div class="diagram-mock">
+              <div style="font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; text-align: left; background: rgba(0,0,0,0.2);">
+                <strong style="color: var(--color-secondary);">users Table</strong><br>
+                id (PK) | email (Unique) | role | password
+              </div>
+              <div style="text-align: center; color: var(--color-primary); font-size: 0.9rem;">1 : N (Foreign Key)</div>
+              <div style="font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; text-align: left; background: rgba(0,0,0,0.2);">
+                <strong style="color: var(--color-secondary);">leads Table</strong><br>
+                id (PK) | name | status (Indexed) | assigned_to (FK)
+              </div>
+              <div style="text-align: center; color: var(--color-primary); font-size: 0.9rem;">1 : N (Cascade)</div>
+              <div style="font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; text-align: left; background: rgba(0,0,0,0.2);">
+                <strong style="color: var(--color-secondary);">activity_logs Table</strong><br>
+                id (PK) | lead_id (FK) | action_type | description
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 6: Lead Auto-Assignment -->
+      <div class="slide-card" data-slide="6">
+        <div class="slide-header">
+          <div>
+            <span class="slide-category">Algorithms</span>
+            <h2 class="slide-title">5. Auto-Assignment Logic</h2>
+          </div>
+          <span class="slide-number">06 / 08</span>
+        </div>
+        <div class="slide-content">
+          <div class="desc-column">
+            <p>We implemented a workload-balanced **Least-Loaded Agent** selector algorithm, executed in a single DB query:</p>
+            <ul class="points-list">
+              <li><strong>Workload Aggregation</strong>: The scheduler counts total open leads held by active agents.</li>
+              <li><strong>SQL-Driven Decision</strong>: Left joins and group aggregations fetch the target agent in a single database roundtrip, optimizing resource usage.</li>
+              <li><strong>Graceful Degradation</strong>: If no agents are registered in the system, the lead remains unassigned rather than failing, allowing manual overrides later.</li>
+            </ul>
+          </div>
+          <div class="visual-column" style="background: #07090e;">
+            <pre class="code-snippet">
+<span style="color: #6d7185;">-- Workload Distribution Query</span>
+<span style="color: #f472b6;">SELECT</span> u.id, u.name, <span style="color: #38bdf8;">COUNT</span>(l.id) <span style="color: #f472b6;">AS</span> lead_count
+<span style="color: #f472b6;">FROM</span> users u
+<span style="color: #f472b6;">LEFT JOIN</span> leads l <span style="color: #f472b6;">ON</span> u.id = l.assigned_to
+<span style="color: #f472b6;">WHERE</span> u.role = <span style="color: #38bdf8;">'Agent'</span>
+<span style="color: #f472b6;">GROUP BY</span> u.id
+<span style="color: #f472b6;">ORDER BY</span> lead_count <span style="color: #f472b6;">ASC</span>
+<span style="color: #f472b6;">LIMIT</span> 1</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 7: Scalability -->
+      <div class="slide-card" data-slide="7">
+        <div class="slide-header">
+          <div>
+            <span class="slide-category">Performance</span>
+            <h2 class="slide-title">6. Scalability & Extensibility</h2>
+          </div>
+          <span class="slide-number">07 / 08</span>
+        </div>
+        <div class="slide-content">
+          <div class="desc-column">
+            <p>Our code includes non-functional parameters to safeguard performance at high usage scales:</p>
+            <ul class="points-list">
+              <li><strong>Offset Pagination</strong>: All listings support server-enforced pagination (using database cursors via SQL <code>LIMIT</code> & <code>OFFSET</code>), preventing memory bloat on heavy tables.</li>
+              <li><strong>Client-Side Debouncing</strong>: Live-searching inputs use a 400ms debounce buffer, filtering duplicate HTTP fetch calls during active user keypresses.</li>
+              <li><strong>Third-Party Enrichment Scraper</strong>: Fetches domain enrichments asynchronously using <code>microlink.io</code>. Implements a 4-second maximum fetch timeout to ensure database lead creation succeeds even if the external scraper lags.</li>
+            </ul>
+          </div>
+          <div class="visual-column">
+            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; font-size: 0.9rem;">
+                🚀 <strong>Pagination Mode</strong>: Backend-enforced LIMIT/OFFSET database cursors.
+              </div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; font-size: 0.9rem;">
+                ⏱️ <strong>Scraper Isolator</strong>: Non-blocking fetch calls with strict fallback timeouts.
+              </div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; font-size: 0.9rem;">
+                📉 <strong>Debounced Fetches</strong>: Prevents rapid frontend typing API floods.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 8: Challenges & Improvements -->
+      <div class="slide-card" data-slide="8">
+        <div class="slide-header">
+          <div>
+            <span class="slide-category">Evaluation</span>
+            <h2 class="slide-title">7. Challenges & Future Scope</h2>
+          </div>
+          <span class="slide-number">08 / 08</span>
+        </div>
+        <div class="slide-content">
+          <div class="desc-column">
+            <p>During the build, we encountered platform and design hurdles, mapping clear mitigations and extensions:</p>
+            <ul class="points-list">
+              <li><strong>PowerShell Restrictions</strong>: PowerShell execution controls blocked default <code>npm</code> scripts. We bypassed this by invoking <code>npm.cmd</code> directly inside the command runtime environment.</li>
+              <li><strong>Future caching</strong>: To optimize heavy workloads, we plan to implement a Redis store layer to cache dashboard summaries and active list metrics.</li>
+              <li><strong>Real-time Notifications</strong>: The WebSocket setup can be combined with Nodemailer worker services to email agents immediately upon assignment.</li>
+            </ul>
+          </div>
+          <div class="visual-column">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+              <strong style="color: var(--color-primary); font-size: 0.95rem;">Key Milestones Achieved:</strong>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">Dual DB Adapter</span>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">Auto-Enrichment</span>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">WS Event Broker</span>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">RBAC Verification</span>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">Jest Unit Tests</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Navigation Controls Footer -->
+    <div class="footer-controls">
+      <div id="dots" class="dots-nav">
+        <div class="dot active" onclick="goToSlide(1)"></div>
+        <div class="dot" onclick="goToSlide(2)"></div>
+        <div class="dot" onclick="goToSlide(3)"></div>
+        <div class="dot" onclick="goToSlide(4)"></div>
+        <div class="dot" onclick="goToSlide(5)"></div>
+        <div class="dot" onclick="goToSlide(6)"></div>
+        <div class="dot" onclick="goToSlide(7)"></div>
+        <div class="dot" onclick="goToSlide(8)"></div>
+      </div>
+      
+      <div class="buttons-nav">
+        <button id="prevBtn" class="nav-btn" onclick="prevSlide()" style="visibility: hidden;">◀ Back</button>
+        <button id="nextBtn" class="nav-btn primary" onclick="nextSlide()">Next ▶</button>
+      </div>
+    </div>
+
+    <div class="keyboard-hint">Use Left / Right arrow keys or Spacebar to navigate</div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 8;
+
+    function updatePresentation() {
+      // Update Slide Display
+      const cards = document.querySelectorAll('.slide-card');
+      cards.forEach(card => {
+        const slideNum = parseInt(card.getAttribute('data-slide'));
+        card.classList.remove('active', 'prev');
+        
+        if (slideNum === currentSlide) {
+          card.classList.add('active');
+        } else if (slideNum < currentSlide) {
+          card.classList.add('prev');
+        }
+      });
+
+      // Update Nav Dots
+      const dots = document.querySelectorAll('.dot');
+      dots.forEach((dot, index) => {
+        if (index + 1 === currentSlide) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+
+      // Update Progress Bar
+      const progressWidth = (currentSlide / totalSlides) * 100;
+      document.getElementById('progress').style.width = progressWidth + '%';
+
+      // Update Nav Buttons visibility/labels
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+
+      if (currentSlide === 1) {
+        prevBtn.style.visibility = 'hidden';
+      } else {
+        prevBtn.style.visibility = 'visible';
+      }
+
+      if (currentSlide === totalSlides) {
+        nextBtn.innerHTML = 'Finish';
+      } else {
+        nextBtn.innerHTML = 'Next ▶';
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updatePresentation();
+      } else {
+        alert('Thank you! You have reached the end of the presentation.');
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updatePresentation();
+      }
+    }
+
+    function goToSlide(n) {
+      currentSlide = n;
+      updatePresentation();
+    }
+
+    // Keyboard Listeners
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
