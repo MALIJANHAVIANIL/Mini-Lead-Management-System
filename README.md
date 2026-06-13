@@ -100,19 +100,3 @@ Once the server is running, navigate to:
 👉 [http://localhost:5000/api-docs/](http://localhost:5000/api-docs/)
 
 This page provides an interactive Swagger UI where you can inspect all endpoints, headers, payloads, and response shapes.
-
----
-
-## Design Assumptions & Tradeoffs
-
-### 1. Unified DB Query Adapter
-- **Assumption**: We assumed that using a heavyweight ORM (like Prisma or Sequelize) could add unnecessary learning curves for a fresher trying to explain the code.
-- **Tradeoff**: Instead, we wrote a lightweight Promise wrapper in `db.js` that converts PostgreSQL param placeholders (`$1, $2`) to SQLite format (`?`) on the fly. This keeps all controller queries standard, readable SQL, highlighting raw database design understanding.
-
-### 2. Hash-based Single Page App (SPA) View Switching
-- **Assumption**: We assumed that bringing in frontend frameworks like React or Angular would complicate the deliverables and make setup difficult.
-- **Tradeoff**: We chose **Plain HTML/CSS/JS** and implemented a simple function `switchView(viewName)` that toggles CSS classes to show/hide sections. This performs like a React SPA without the compiling overhead, resulting in 100% immediate local loads.
-
-### 3. Keyless Microlink Company Enrichment
-- **Assumption**: A fresher might not have paid API keys for profile enrichment tools (like Clearbit or ZoomInfo).
-- **Tradeoff**: We integrated `microlink.io`, a keyless public metadata scraping service. When a lead email is registered, we scrape its domain (e.g. `stripe.com`) to extract details. It degrades gracefully (using a 4-second fetch timeout) if the API fails, ensuring the lead is still created.
