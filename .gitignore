@@ -1,0 +1,13 @@
+# Dependency directories
+backend/node_modules/
+
+# Local SQLite databases
+backend/database.db
+backend/database.db-journal
+
+# Environment variables (secrets/local configs)
+backend/.env
+
+# OS-generated files
+.DS_Store
+Thumbs.db
